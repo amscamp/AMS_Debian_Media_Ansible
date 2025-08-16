@@ -1,0 +1,12 @@
+{
+  "policies": {
+    "ExtensionSettings": {
+{% for item in extensions %}
+      "{{ item.id }}": {
+        "installation_mode": "force_installed",
+        "install_url": "{{ item.url }}"
+      }{{ "," if not loop.last }}
+{% endfor %}
+    }
+  }
+}

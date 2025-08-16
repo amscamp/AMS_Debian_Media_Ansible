@@ -1,0 +1,33 @@
+---
+- name: install libreoffice packages
+  apt:
+    state: latest
+    name: "{{ item }}" 
+  loop:
+    - libreoffice-help-en-us
+    - libreoffice-impress
+    - libreoffice-kf5
+    - libreoffice-plasma
+    - libreoffice-writer
+    - libreoffice-calc
+    - libreoffice-base
+    - mythes-en-us
+
+- name: install additional packages
+  apt:
+    state: latest
+    name: "{{ item }}" 
+  loop:
+    - arandr
+
+
+
+- name: install packages
+  apt:
+    state: latest
+    name: "{{ item }}" 
+  loop:
+    - curl
+    - jq
+
+

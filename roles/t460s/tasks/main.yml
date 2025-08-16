@@ -1,0 +1,9 @@
+---
+- name: install basic t460s applications
+  apt:
+    state: latest
+    name: "{{ item }}" 
+  loop:
+    - firmware-iwlwifi
+    - tlp
+    - powertop

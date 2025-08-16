@@ -1,0 +1,27 @@
+passwd_folder: system
+passwd_wifi_folder: wifi
+passwd_mandatory_folder: systemmandatory
+wallet_username: root
+wallet_userhome: /root
+password_username: user
+
+default_entries:
+  - key: "Encryption"
+    value: "encryptionpw"  
+  - key: "RootPW"
+    value: "rootpw"
+  - key: "UserPW"
+    value: "userpw"
+
+default_mandatory_entries:
+  - key: "encryptionmgmt"
+
+
+gpg_keylength: 2048
+gpg_subkeylength: 2048
+gpg_realname: "{{ wallet_username }}"
+gpg_useremail: "{{ wallet_username }}@localhost"
+gpg_pubkeyfile: "{{ wallet_username }}.pub"
+gpg_privkeyfile: "{{ wallet_username }}.priv"
+gpg_pubkeyfileexport: "{{ wallet_username }}.asc"
+gpg_fingerprint: "{{ wallet_username }}-fingerprint"

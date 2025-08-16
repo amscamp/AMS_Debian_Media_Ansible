@@ -1,0 +1,131 @@
+---
+
+- name: install needed packages
+  apt:
+    state: latest
+    name: "{{ item }}" 
+  loop:
+    - tilix
+    - zsh
+    - dbus-x11
+    - dconf-service
+    - dconf-cli
+    - git
+    
+- name: remove termit
+  apt:
+    state: absent
+    name: "termit" 
+
+- name: copy tilix config
+  copy:
+    src: "{{ role_path }}/files/tilix.dconf"
+    dest: "/home/{{ terminal_username }}/tilix.dconf"
+    owner: "{{ terminal_username }}"
+    group: "{{ terminal_username }}"
+    mode: '0644'
+
+- name: load tilix config
+  become: true
+  become_method: su
+  become_user: "{{ terminal_username }}"
+  shell: dbus-launch dconf load /com/gexperts/Tilix/ < /home/{{ terminal_username }}/tilix.dconf
+
+- name: remove tilix config
+  file:
+    path: "/home/{{ terminal_username }}/tilix.dconf"
+    state: absent
+
+- name: Set tilix as default terminal 
+  community.general.ini_file:
+    path: "/home/{{ terminal_username }}/.config/kdeglobals"
+    section: General
+    option: "TerminalApplication"
+    value: "tilix"
+
+- name: install/update Oh My Zsh
+  git:
+    repo: 'https://github.com/robbyrussell/oh-my-zsh.git'
+    dest: /root/.oh-my-zsh
+    depth: 1
+
+- name: install zsh-autosuggestions
+  git:
+    repo: 'https://github.com/zsh-users/zsh-autosuggestions'
+    dest: /root/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+    depth: 1
+
+- name: install/update Oh My Zsh terminal user
+  become: true
+  become_method: su
+  become_user: "{{ terminal_username }}"
+  git:
+    repo: 'https://github.com/robbyrussell/oh-my-zsh.git'
+    dest: ~/.oh-my-zsh
+    depth: 1
+
+- name: install zsh-autosuggestions terminal user
+  become: true
+  become_method: su
+  become_user: "{{ terminal_username }}"
+  git:
+    repo: 'https://github.com/zsh-users/zsh-autosuggestions'
+    dest: ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+    depth: 1
+    
+- name: install Powelevel10k
+  git:
+    repo: 'https://github.com/romkatv/powerlevel10k.git'
+    dest: /root/.oh-my-zsh/custom/themes/powerlevel10k
+    depth: 1
+
+- name: install Powelevel10k terminal user
+  become: true
+  become_method: su
+  become_user: "{{ terminal_username }}"
+  git:
+    repo: 'https://github.com/romkatv/powerlevel10k.git'
+    dest: ~/.oh-my-zsh/custom/themes/powerlevel10k
+    depth: 1
+
+- name: copy zsh config 
+  copy:
+    src: "{{ role_path }}/files/{{ item }}"
+    dest: "/root/.{{ item }}"
+    owner: "root"
+    group: "root"
+    mode: '0644'
+  loop:
+    - zshrc
+    - p10k.zsh
+
+- name: copy zsh config terminal user
+  copy:
+    src: "{{ role_path }}/files/{{ item }}"
+    dest: "/home/{{ terminal_username }}/.{{ item }}"
+    owner: "{{ terminal_username }}"
+    group: "{{ terminal_username }}"
+    mode: '0644'
+  loop:
+    - zshrc
+    - p10k.zsh
+
+- name: Ensure the users have a zsh shell.
+  user:
+    name: "{{ item }}"
+    shell: /usr/bin/zsh
+    state: present
+  loop:
+    - "{{ terminal_username }}"
+    - root
+
+- name: copy fonts
+  copy:
+    src: "{{ role_path }}/files/fonts/{{ item }}"
+    dest: "/usr/local/share/fonts/{{ item }}"
+  loop:
+    - MesloLGS NF Bold Italic.ttf
+    - MesloLGS NF Bold.ttf
+    - MesloLGS NF Italic.ttf
+    - MesloLGS NF Regular.ttf
+  notify: 'rebuild fonts cache'

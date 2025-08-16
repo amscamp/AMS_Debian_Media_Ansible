@@ -1,0 +1,24 @@
+---
+- name: install firefox-esr
+  apt:
+    state: latest
+    name: "{{ item }}" 
+  loop:
+    - firefox-esr
+
+
+- name: Creates firefox policy directory
+  file:
+    path: /etc/firefox/policies
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Remove firefox policy file
+  ansible.builtin.file:
+    path: /etc/firefox/policies/policies.json
+    state: absent
+
+- name: Create firefox policy file
+  template: src=policies.json.j2 dest=/etc/firefox/policies/policies.json

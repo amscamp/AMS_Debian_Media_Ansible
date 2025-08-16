@@ -1,0 +1,111 @@
+---
+
+- name: install needed packages
+  apt:
+    state: latest
+    name: "{{ item }}" 
+  loop:
+    - plasma-desktop
+    - plasma-workspace
+    - udisks2
+    - upower
+    - kwin-x11
+    - sddm
+    - xserver-xorg
+    - ark
+    - gwenview
+    - kate
+    - kcalc
+    - kde-spectacle
+    - khelpcenter
+    - kwalletmanager
+    - okular
+    - plasma-dataengines-addons 
+    - plasma-pa
+    - plasma-runners-addons
+    - plasma-wallpapers-addons
+    - plasma-widgets-addons
+    - polkit-kde-agent-1
+    - sweeper
+    - plasma-nm
+    - print-manager
+    - dolphin
+    - kdialog
+    - kfind
+    - k3b
+    - gdebi
+    - pulseaudio-module-bluetooth
+    - bluez-firmware
+
+
+- name: Check if .configfolder exists
+  stat:
+    path: "/home/{{ desktop_username }}/.config"
+  register: config_exists
+
+- name: creating .config folder
+  file:
+   path: "/home/{{ desktop_username }}/.config"
+   state: directory
+   owner: "{{ desktop_username }}"
+   group: "{{ desktop_username }}"
+   mode: '0755'
+  when: not config_exists.stat.exists
+
+
+# - name: Check if .config/gtk-3.0 folder exists
+#   stat:
+#     path: "/home/{{ desktop_username }}/.config/gtk-3.0"
+#   register: config_gtk3_exists
+
+# - name: creating .config/gtk-3.0 folder
+#   file:
+#    path: "/home/{{ desktop_username }}/.config/gtk-3.0"
+#    state: directory
+#    owner: "{{ desktop_username }}"
+#    group: "{{ desktop_username }}"
+#    mode: '0755'
+#   when: not config_gtk3_exists.stat.exists
+
+# - name: copy gtk3 color config
+#   copy:
+#     src: "{{ role_path }}/files/colors.css"
+#     dest: "/home/{{ desktop_username }}/.config/gtk-3.0/colors.css"
+#     owner: "{{ desktop_username }}"
+#     group: "{{ desktop_username }}"
+#     mode: '0644'
+
+
+- name: Enable tapping for touchpad
+  community.general.ini_file:
+    path: "/home/{{ desktop_username }}/.config/touchpadrc"
+    section: parameters
+    option: Tapping
+    value: 'true'
+    state: present
+    exclusive: true
+
+- name: set owner for touchpadrc
+  ansible.builtin.file:
+    path: "/home/{{ desktop_username }}/.config/touchpadrc"
+    state: file
+    owner: "{{ desktop_username }}"
+    group: "{{ desktop_username }}"
+    mode: '0644'
+
+- name: set breeze dark
+  community.general.ini_file:
+    path: "/home/{{ desktop_username }}/.config/plasmarc"
+    section: Theme
+    option: name
+    value: 'breeze-dark'
+    state: present
+    exclusive: true
+
+- name: set owner for plasmarc
+  ansible.builtin.file:
+    path: "/home/{{ desktop_username }}/.config/plasmarc"
+    state: file
+    owner: "{{ desktop_username }}"
+    group: "{{ desktop_username }}"
+    mode: '0644'

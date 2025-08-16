@@ -1,0 +1,59 @@
+---
+
+- name: Gather the package facts
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: check if deb_multimedia_keyring is already installed
+  ansible.builtin.set_fact:
+    deb_multimedia_keyring: "{{ ansible_facts.packages[item] }}"
+  loop: "{{ ansible_facts.packages.keys() | select('match', '^deb-multimedia-keyring') | list }}"
+
+- name: determinate deb_multimedia_keyring version
+  shell: echo $(curl -s https://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/ | grep -o 'deb-multimedia-keyring_[0-9]*\.[0-9]*\.[0-9]*\_all.deb' | head -1| grep -o '[0-9]*\.[0-9]*\.[0-9]*')
+  register: tempversion
+
+- name: Check if external deb_multimedia_keyring version could be received
+  ansible.builtin.fail:
+    msg: The current online version of deb_multimedia_keyring could not be received, check role!
+  when: tempversion.stdout == ""
+
+- name: determinate deb_multimedia_keyring link
+  shell: echo "https://www.deb-multimedia.org/pool/main/d/deb-multimedia-keyring/deb-multimedia-keyring_{{ tempversion.stdout }}_all.deb"
+  register: tempurl
+  when: tempversion.stdout != ""
+
+- name: Install deb_multimedia_keyring if not installed
+  apt: deb={{ tempurl.stdout }}
+  when: ( tempurl is defined and tempurl.stdout != "" and hostvars[inventory_hostname].deb_multimedia_keyring is not defined )
+
+- name: Install deb_multimedia_keyring if newer version
+  apt: deb={{ tempurl.stdout }}
+  when: ( tempurl is defined and tempurl.stdout != "" and hostvars[inventory_hostname].deb_multimedia_keyring is defined and ( hostvars[inventory_hostname].deb_multimedia_keyring[0].version < tempversion.stdout ))
+
+- name: "Ansible | Print 'lsb_release'"
+  debug:
+    msg: "{{ ansible_distribution_release }}"
+
+- name: Add deb-multimedia repository
+  ansible.builtin.apt_repository:
+    repo: deb https://www.deb-multimedia.org {{ ansible_distribution_release }} main non-free
+    state: present
+    filename: deb-multimedia
+  register: deb_multimedia
+
+- name: Upgrade the OS (apt-get dist-upgrade)
+  ansible.builtin.apt:
+    upgrade: dist
+    update_cache: yes
+  when: deb_multimedia.changed
+
+- name: install deb-multimedia packages
+  apt:
+    state: latest
+    name: "{{ item }}" 
+  loop:
+    - avidemux
+    - ffmpeg
+    - audacity
+    - vlc

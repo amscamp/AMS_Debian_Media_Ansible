@@ -1,0 +1,102 @@
+---
+
+# - name: make sure kargos folder exists
+#   file:
+#     path: "/home/{{ desktop_username }}/software/kargos"
+#     state: directory
+#     owner: "{{ desktop_username }}"
+#     group: "{{ desktop_username }}"
+#     mode: '0755'
+
+# - shell: 'git config --global --add safe.directory /home/{{ desktop_username }}/software/kargos'
+#   args:
+#     executable: /bin/bash
+#   become: true
+#   become_method: su
+#   become_user: "{{ desktop_username }}"
+
+- name: clone repos
+  become: true
+  become_method: su
+  become_user: "{{ desktop_username }}"
+  git:
+    repo: "https://github.com/lipido/kargos.git"
+    dest: '/home/{{ desktop_username }}/software/kargos'
+
+- name: check if kargos already installed
+  become: true
+  become_method: su
+  become_user: "{{ desktop_username }}"
+  stat:
+    path: '/home/{{ desktop_username }}/.local/share/plasma/plasmoids/org.kde.kargos'
+  register: kargos_installed
+
+- shell: 'cd /home/{{ desktop_username }}/software/kargos && kpackagetool5 -t Plasma/Applet --remove plasmoid'
+  args:
+    executable: /bin/bash
+  become: true
+  become_method: su
+  become_user: "{{ desktop_username }}"
+  when: kargos_installed.stat.exists   
+
+- shell: 'cd /home/{{ desktop_username }}/software/kargos && kpackagetool5 -t Plasma/Applet --install plasmoid'
+  args:
+    executable: /bin/bash
+  become: true
+  become_method: su
+  become_user: "{{ desktop_username }}"
+
+
+- name: make sure .config/ansible_distro exists
+  file:
+    path: "/home/{{ desktop_username }}/.config/ansible_distro"
+    state: directory
+    owner: "{{ desktop_username }}"
+    group: "{{ desktop_username }}"
+    mode: '0755'
+
+
+- name: copy Plasma shell config script
+  copy:
+    src: configure_plasma_shell.js
+    dest: '/home/{{ desktop_username }}/.config/ansible_distro/configure_plasma_shell.js'
+    owner: "{{ desktop_username }}"
+    group: "{{ desktop_username }}"
+    mode: '0755'
+
+- name: copy Plasma shell config runner script
+  template:
+    dest: '/home/{{ desktop_username }}/.config/ansible_distro/configure_plasma_shell.sh'
+    src: configure_plasma_shell.sh
+    owner: "{{ desktop_username }}"
+    group: "{{ desktop_username }}"
+    mode: '0755'
+
+- name: make sure .config/autostart-scripts exists
+  file:
+    path: "/home/{{ desktop_username }}/.config/autostart-scripts"
+    state: directory
+    owner: "{{ desktop_username }}"
+    group: "{{ desktop_username }}"
+    mode: '0755'
+
+- name: Create autostart symlink
+  ansible.builtin.file:
+    src: '/home/{{ desktop_username }}/.config/ansible_distro/configure_plasma_shell.sh'
+    dest: '/home/{{ desktop_username }}/.config/autostart-scripts/configure_plasma_shell.sh'
+    owner: "{{ desktop_username }}"
+    group: "{{ desktop_username }}"
+    state: link
+    follow: False
+
+- name: make sure /ansible_distro exists
+  file:
+    path: "/ansible_distro"
+    state: directory
+    mode: '0755'
+
+- name: copy wallpaper
+  copy:
+    src: KDE-Plasma-Dark-960-HD-WL.jpg
+    dest: '/ansible_distro/KDE-Plasma-Dark-960-HD-WL.jpg'
+    mode: '0755'
