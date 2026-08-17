@@ -42,6 +42,7 @@
 
   roles:
   - role: computername
+  - role: upgrade
   - role: ssh
     ssh_username: "{{ username }}"
   - role: kde-desktop
